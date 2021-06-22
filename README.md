@@ -1,4 +1,4 @@
-## rpfload
+## rpfload - FreeBSD
 
 rpfload is a Perl script for applying pf firewall configurations on OpenBSD with automatic rollback to a backup pf.conf file after a configurable period of time.
 
@@ -23,6 +23,11 @@ so you can check `/var/log/messages` and see exactly which config file it ended 
 To install rpfload and its man page, run:
 ```
 # ./install.sh
+```
+## Perl Dependencies
+
+```
+p5-Term-ReadKey-2.38_1
 ```
 
 ### Usage
