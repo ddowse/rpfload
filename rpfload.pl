@@ -81,7 +81,7 @@ if ( !$disable ) {
     syslog ( "warning", "Backup file %s not found", $backup_config );
     }
     if ( -z $backup_config ) { 
-        print ( "Backup config is an empty file. You got timeout Seconds to abort with Ctrl+C...\n" );
+        print ( "Backup config is an empty file. You got $timeout Seconds to abort with Ctrl+C...\n" );
         $| = 1;  #autoflush
         ReadMode 4;
         while ( $timeout != 0 && not defined ($keypress = ReadKey(-1))) {
