@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Copyright (c) 2021 Joseph Fierro <joe@kernelpanic.life>
 #
 # Permission to use, copy, modify, and distribute this software for any
@@ -19,7 +19,7 @@ use warnings;
 use Getopt::Long;
 use Sys::Syslog qw(:DEFAULT setlogsock);
 use File::Basename;
-use OpenBSD::Pledge;
+use Term::ReadKey;
 
 my $live_config;
 my $backup_config;
@@ -27,9 +27,8 @@ my $time;
 my $overwrite = 0;
 my $disable = 0;
 my $help = 0;
-
-pledge ( qw ( rpath unix proc exec ))
-    or die "Unable to pledge: $!";
+my $timeout = 3;
+my $keypress;
 
 GetOptions(
     "live_config|f=s" => \$live_config,
@@ -73,9 +72,27 @@ setlogsock ( "unix" );
 openlog ( basename ( $0 ), "pid", "local3" )
     or die "Could not open syslog";
 
-# First, check the backup file for errors, if we're using one.
-# If that fails, log it and die now, because we don't want to continue
+# First, if the backup file exists then check the backup file for errors, 
+# if we're using one. If that fails, log it and die now, because we don't 
+# want to continue
 if ( !$disable ) {
+    if ( !-f $backup_config ) {
+    die "Backup config not found...\n";
+    syslog ( "warning", "Backup file %s not found", $backup_config );
+    }
+    if ( -z $backup_config ) { 
+        print ( "Backup config is an empty file. You got timeout Seconds to abort with Ctrl+C...\n" );
+        $| = 1;  #autoflush
+        ReadMode 4;
+        while ( $timeout != 0 && not defined ($keypress = ReadKey(-1))) {
+            print ( "." );
+            sleep ( 1 );
+            $timeout--;
+        }
+        syslog ( "warning", "Continue with empty file: %s", $backup_config );
+        ReadMode 0; #Reset tty mode
+        print ( "Continue\n" );
+    }
     print ( "Checking backup config for syntax errors...\n" );
     system ( '/sbin/pfctl', '-nf', $backup_config );
     if ( $? != 0 ) { 
